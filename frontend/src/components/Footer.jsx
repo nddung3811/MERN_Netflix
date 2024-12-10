@@ -11,9 +11,9 @@ const Footer = () => {
 					>
 						you
 					</a>
-					. The source code is availablehttps://github.com/nddung3811 on{" "}
+					. The source code is available on{" "}
 					<a
-						href='https://github.com/burakorkmez'
+						href='https://github.com/nddung3811'
 						target='_blank'
 						rel='noreferrer'
 						className='font-medium underline underline-offset-4'
