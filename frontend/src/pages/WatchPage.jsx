@@ -8,14 +8,19 @@ import ReactPlayer from "react-player";
 import { ORIGINAL_IMG_BASE_URL, SMALL_IMG_BASE_URL } from "../utils/constants";
 import { formatReleaseDate } from "../utils/dateFunction";
 import WatchPageSkeleton from "../components/skeletons/WatchPageSkeleton";
+import useGetOPhimContent from "../hooks/useGetOPhimContent";
 
 const WatchPage = () => {
 	const { id } = useParams();
+	const { slug } = useParams();
+	console.log("Slug từ URL:", slug); // Debug giá trị slug
+	const { movie: ophimVideoUrl, loading: ophimLoading, error: ophimError } = useGetOPhimContent(slug);
 	const [trailers, setTrailers] = useState([]);
 	const [currentTrailerIdx, setCurrentTrailerIdx] = useState(0);
 	const [loading, setLoading] = useState(true);
 	const [content, setContent] = useState({});
 	const [similarContent, setSimilarContent] = useState([]);
+	const [videoUrl, setVideoUrl] = useState(null);
 	const { contentType } = useContentStore();
 
 	const sliderRef = useRef(null);
@@ -54,6 +59,7 @@ const WatchPage = () => {
 		const getContentDetails = async () => {
 			try {
 				const res = await axios.get(`/api/v1/${contentType}/${id}/details`);
+				console.log("Content Details:", res.data.content);
 				setContent(res.data.content);
 			} catch (error) {
 				if (error.message.includes("404")) {
@@ -66,6 +72,18 @@ const WatchPage = () => {
 
 		getContentDetails();
 	}, [contentType, id]);
+
+
+	useEffect(() => {
+		if (ophimVideoUrl) {
+			setVideoUrl(ophimVideoUrl); // Cập nhật videoUrl từ hook
+		}
+	}, [ophimVideoUrl]);
+
+
+
+
+
 
 	const handleNext = () => {
 		if (currentTrailerIdx < trailers.length - 1) setCurrentTrailerIdx(currentTrailerIdx + 1);
@@ -80,6 +98,7 @@ const WatchPage = () => {
 	const scrollRight = () => {
 		if (sliderRef.current) sliderRef.current.scrollBy({ left: sliderRef.current.offsetWidth, behavior: "smooth" });
 	};
+
 
 	if (loading)
 		return (
@@ -100,11 +119,27 @@ const WatchPage = () => {
 			</div>
 		);
 	}
+	if (ophimLoading) {
+		return (
+			<div className="min-h-screen bg-black p-10">
+				<WatchPageSkeleton />
+			</div>
+		);
+	}
+
+	if (ophimError) {
+		console.error("Lỗi khi fetch phim từ OPhim:", ophimError);
+		return (
+			<div className="bg-black text-white h-screen flex justify-center items-center">
+				<h2 className="text-xl">Không thể tải nội dung phim: {ophimError}</h2>
+			</div>
+		);
+	}
 
 	return (
 		<div className='bg-black min-h-screen text-white'>
 			<div className='mx-auto container px-4 py-8 h-full'>
-				<Navbar />
+				<Navbar/>
 
 				{trailers.length > 0 && (
 					<div className='flex justify-between items-center mb-4'>
@@ -117,7 +152,7 @@ const WatchPage = () => {
 							disabled={currentTrailerIdx === 0}
 							onClick={handlePrev}
 						>
-							<ChevronLeft size={24} />
+							<ChevronLeft size={24}/>
 						</button>
 
 						<button
@@ -129,33 +164,43 @@ const WatchPage = () => {
 							disabled={currentTrailerIdx === trailers.length - 1}
 							onClick={handleNext}
 						>
-							<ChevronRight size={24} />
+							<ChevronRight size={24}/>
 						</button>
 					</div>
 				)}
 
 				<div className='aspect-video mb-8 p-2 sm:px-10 md:px-32'>
-					{trailers.length > 0 && (
+					{videoUrl ? (
+						// Hiển thị video từ OPhim nếu có
 						<ReactPlayer
 							controls={true}
-							width={"100%"}
-							height={"70vh"}
+							width="100%"
+							height="70vh"
+							className='mx-auto overflow-hidden rounded-lg'
+							url={videoUrl}
+						/>
+					) : trailers.length > 0 ? (
+						// Hiển thị trailer từ TMDB nếu không có video từ OPhim
+						<ReactPlayer
+							controls={true}
+							width="100%"
+							height="70vh"
 							className='mx-auto overflow-hidden rounded-lg'
 							url={`https://www.youtube.com/watch?v=${trailers[currentTrailerIdx].key}`}
 						/>
-					)}
-
-					{trailers?.length === 0 && (
+					) : (
+						// Hiển thị thông báo nếu không có video nào
 						<h2 className='text-xl text-center mt-5'>
-							No trailers available for{" "}
+							No trailers or videos available for{" "}
 							<span className='font-bold text-red-600'>{content?.title || content?.name}</span> 😥
 						</h2>
 					)}
 				</div>
 
+
 				{/* movie details */}
 				<div
-					className='flex flex-col md:flex-row items-center justify-between gap-20 
+					className='flex flex-col md:flex-row items-center justify-between gap-20
 				max-w-6xl mx-auto'
 				>
 					<div className='mb-4 md:mb-0'>
@@ -204,8 +249,8 @@ const WatchPage = () => {
 								onClick={scrollRight}
 							/>
 							<ChevronLeft
-								className='absolute top-1/2 -translate-y-1/2 left-2 w-8 h-8 opacity-0 
-								group-hover:opacity-100 transition-all duration-300 cursor-pointer bg-red-600 
+								className='absolute top-1/2 -translate-y-1/2 left-2 w-8 h-8 opacity-0
+								group-hover:opacity-100 transition-all duration-300 cursor-pointer bg-red-600
 								text-white rounded-full'
 								onClick={scrollLeft}
 							/>
@@ -214,6 +259,7 @@ const WatchPage = () => {
 				)}
 			</div>
 		</div>
+
 	);
 };
 export default WatchPage;
