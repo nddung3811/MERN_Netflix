@@ -1,4 +1,5 @@
 import { fetchFromTMDB } from "../services/tmdb.service.js";
+import Movie from "../models/movie.model.js";
 
 export async function getTrendingMovie(req, res) {
 	try {
@@ -55,6 +56,19 @@ export async function getMoviesByCategory(req, res) {
 		const data = await fetchFromTMDB(`https://api.themoviedb.org/3/movie/${category}?language=en-US&page=1`);
 		res.status(200).json({ success: true, content: data.results });
 	} catch (error) {
+		res.status(500).json({ success: false, message: "Internal Server Error" });
+	}
+}
+export async function getMovieEmbedLink(req, res) {
+	const { id } = req.params; // id là tmdb_id
+	try {
+		const movie = await Movie.findOne({ tmdb_id: id });
+		if (!movie) {
+			return res.status(404).json({ success: false, message: "Movie not found" });
+		}
+		res.status(200).json({ success: true, link: movie.linkEmbed });
+	} catch (error) {
+		console.error("Error fetching movie link: ", error);
 		res.status(500).json({ success: false, message: "Internal Server Error" });
 	}
 }

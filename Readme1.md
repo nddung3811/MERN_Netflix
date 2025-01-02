@@ -44,7 +44,7 @@ mern-netflix-clone/
 │   │   │
 │   │   ├── hooks/                  # Custom hooks
 │   │   │   ├── useGetTrendingContent.jsx   # Lấy nội dung trending từ TMDB
-│   │   │   └── useGetOPhimContent.js       # [MỚI] Hook gọi API OPhim
+│   │   │   
 │   │   │
 │   │   ├── pages/                  # Các trang chính của ứng dụng
 │   │   │   ├── home/               # Trang chủ

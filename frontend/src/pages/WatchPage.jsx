@@ -8,20 +8,17 @@ import ReactPlayer from "react-player";
 import { ORIGINAL_IMG_BASE_URL, SMALL_IMG_BASE_URL } from "../utils/constants";
 import { formatReleaseDate } from "../utils/dateFunction";
 import WatchPageSkeleton from "../components/skeletons/WatchPageSkeleton";
-import useGetOPhimContent from "../hooks/useGetOPhimContent";
 
 const WatchPage = () => {
 	const { id } = useParams();
-	const { slug } = useParams();
-	console.log("Slug từ URL:", slug); // Debug giá trị slug
-	const { movie: ophimVideoUrl, loading: ophimLoading, error: ophimError } = useGetOPhimContent(slug);
 	const [trailers, setTrailers] = useState([]);
 	const [currentTrailerIdx, setCurrentTrailerIdx] = useState(0);
 	const [loading, setLoading] = useState(true);
 	const [content, setContent] = useState({});
 	const [similarContent, setSimilarContent] = useState([]);
-	const [videoUrl, setVideoUrl] = useState(null);
+	const [embedLink, setEmbedLink] = useState("");
 	const { contentType } = useContentStore();
+
 
 	const sliderRef = useRef(null);
 
@@ -59,7 +56,6 @@ const WatchPage = () => {
 		const getContentDetails = async () => {
 			try {
 				const res = await axios.get(`/api/v1/${contentType}/${id}/details`);
-				console.log("Content Details:", res.data.content);
 				setContent(res.data.content);
 			} catch (error) {
 				if (error.message.includes("404")) {
@@ -73,16 +69,18 @@ const WatchPage = () => {
 		getContentDetails();
 	}, [contentType, id]);
 
-
 	useEffect(() => {
-		if (ophimVideoUrl) {
-			setVideoUrl(ophimVideoUrl); // Cập nhật videoUrl từ hook
-		}
-	}, [ophimVideoUrl]);
+		const getEmbedLink = async () => {
+			try {
+				const res = await axios.get(`/api/v1/movie/${id}/embed`);
+				setEmbedLink(res.data.link); // Cập nhật link vào state
+			} catch (error) {
+				console.error("Error fetching embed link: ", error);
+			}
+		};
 
-
-
-
+		getEmbedLink();
+	}, [id]);
 
 
 	const handleNext = () => {
@@ -98,7 +96,6 @@ const WatchPage = () => {
 	const scrollRight = () => {
 		if (sliderRef.current) sliderRef.current.scrollBy({ left: sliderRef.current.offsetWidth, behavior: "smooth" });
 	};
-
 
 	if (loading)
 		return (
@@ -116,22 +113,6 @@ const WatchPage = () => {
 						<h2 className='text-2xl sm:text-5xl font-bold text-balance'>Content not found 😥</h2>
 					</div>
 				</div>
-			</div>
-		);
-	}
-	if (ophimLoading) {
-		return (
-			<div className="min-h-screen bg-black p-10">
-				<WatchPageSkeleton />
-			</div>
-		);
-	}
-
-	if (ophimError) {
-		console.error("Lỗi khi fetch phim từ OPhim:", ophimError);
-		return (
-			<div className="bg-black text-white h-screen flex justify-center items-center">
-				<h2 className="text-xl">Không thể tải nội dung phim: {ophimError}</h2>
 			</div>
 		);
 	}
@@ -170,30 +151,23 @@ const WatchPage = () => {
 				)}
 
 				<div className='aspect-video mb-8 p-2 sm:px-10 md:px-32'>
-					{videoUrl ? (
-						// Hiển thị video từ OPhim nếu có
-						<ReactPlayer
-							controls={true}
+					{embedLink && (
+						<iframe
+							src={embedLink}
 							width="100%"
 							height="70vh"
-							className='mx-auto overflow-hidden rounded-lg'
-							url={videoUrl}
+							className="mx-auto overflow-hidden rounded-lg"
+							allowFullScreen
 						/>
-					) : trailers.length > 0 ? (
-						// Hiển thị trailer từ TMDB nếu không có video từ OPhim
+					)}
+					{trailers.length > 0 && (
 						<ReactPlayer
 							controls={true}
-							width="100%"
-							height="70vh"
+							width={"100%"}
+							height={"70vh"}
 							className='mx-auto overflow-hidden rounded-lg'
 							url={`https://www.youtube.com/watch?v=${trailers[currentTrailerIdx].key}`}
 						/>
-					) : (
-						// Hiển thị thông báo nếu không có video nào
-						<h2 className='text-xl text-center mt-5'>
-							No trailers or videos available for{" "}
-							<span className='font-bold text-red-600'>{content?.title || content?.name}</span> 😥
-						</h2>
 					)}
 				</div>
 
@@ -259,7 +233,6 @@ const WatchPage = () => {
 				)}
 			</div>
 		</div>
-
 	);
 };
 export default WatchPage;
