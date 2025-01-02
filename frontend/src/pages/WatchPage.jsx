@@ -18,6 +18,7 @@ const WatchPage = () => {
 	const [similarContent, setSimilarContent] = useState([]);
 	const [embedLink, setEmbedLink] = useState("");
 	const { contentType } = useContentStore();
+	const [viewMovie, setViewMovie] = useState(false);
 
 
 	const sliderRef = useRef(null);
@@ -150,28 +151,6 @@ const WatchPage = () => {
 					</div>
 				)}
 
-				<div className='aspect-video mb-8 p-2 sm:px-10 md:px-32'>
-					{embedLink && (
-						<iframe
-							src={embedLink}
-							width="100%"
-							height="70vh"
-							className="mx-auto overflow-hidden rounded-lg"
-							allowFullScreen
-						/>
-					)}
-					{trailers.length > 0 && (
-						<ReactPlayer
-							controls={true}
-							width={"100%"}
-							height={"70vh"}
-							className='mx-auto overflow-hidden rounded-lg'
-							url={`https://www.youtube.com/watch?v=${trailers[currentTrailerIdx].key}`}
-						/>
-					)}
-				</div>
-
-
 				{/* movie details */}
 				<div
 					className='flex flex-col md:flex-row items-center justify-between gap-20
@@ -189,12 +168,61 @@ const WatchPage = () => {
 							)}{" "}
 						</p>
 						<p className='mt-4 text-lg'>{content?.overview}</p>
+						<div className="py-5">
+							<div className="flex justify-start items-center space-x-2">
+								<button
+									className={`bg-white border-black rounded-xl text-black font-semibold px-5 py-2 hover:bg-gray-300`}
+									onClick={() => {
+										setViewMovie(false);
+									}}
+								>
+									Trailer
+								</button>
+								<button
+									disabled={!embedLink}
+									className={`bg-red-400 border-black rounded-xl text-black font-semibold px-5 py-2 hover:bg-red-500`}
+									onClick={() => {
+										setViewMovie(true);
+									}}
+								>
+									{embedLink ? "Movie" : "Soon"}
+								</button>
+							</div>
+						</div>
 					</div>
 					<img
 						src={ORIGINAL_IMG_BASE_URL + content?.poster_path}
 						alt='Poster image'
 						className='max-h-[600px] rounded-md'
 					/>
+				</div>
+
+				<div className='flex justify-center items-center mx-auto aspect-video w-4/5 max-w-[70vw] p-5 m-10 h-auto bg-stone-900 rounded-xl'>
+					{viewMovie ? (
+						<>
+							{embedLink && (
+								<iframe
+									src={embedLink}
+									width="100%"
+									height="100%"
+									className="mx-auto overflow-hidden rounded-lg"
+									allowFullScreen
+								/>
+							)}
+						</>
+					) : (
+						<>
+							{trailers.length > 0 && (
+								<ReactPlayer
+									controls={true}
+									width="100%"
+									height="100%"
+									className='mx-auto overflow-hidden rounded-lg'
+									url={`https://www.youtube.com/watch?v=${trailers[currentTrailerIdx].key}`}
+								/>
+							)}
+						</>
+					)}
 				</div>
 
 				{similarContent.length > 0 && (
