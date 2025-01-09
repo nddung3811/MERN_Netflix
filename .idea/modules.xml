@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/mern-netflix-clone.iml" filepath="$PROJECT_DIR$/.idea/mern-netflix-clone.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/Movie Website.iml" filepath="$PROJECT_DIR$/.idea/Movie Website.iml" />
     </modules>
   </component>
 </project>
